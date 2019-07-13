@@ -6,10 +6,15 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 
 public class SSIDAdapter extends BaseAdapter {
+
+    public static final String SEPERATOR = "||";
+    public static final String LINE = "\n";
+
     private ArrayList<SSIDItem> arrayList = new ArrayList<>();
 
     @Override
@@ -28,8 +33,8 @@ public class SSIDAdapter extends BaseAdapter {
     }
 
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
-        Context context = parent.getContext();
+    public View getView(final int position, View convertView, ViewGroup parent) {
+        final Context context = parent.getContext();
 
         if(convertView == null) {
             LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -56,5 +61,9 @@ public class SSIDAdapter extends BaseAdapter {
     public void addItem(String name, String ssid, String signal) {
         SSIDItem si = new SSIDItem(name, ssid, signal);
         arrayList.add(si);
+    }
+
+    public ArrayList<SSIDItem> getItems() {
+        return arrayList;
     }
 }

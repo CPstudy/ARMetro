@@ -16,8 +16,11 @@ import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,12 +29,19 @@ import java.util.Vector;
 public class MainActivity extends AppCompatActivity {
 
     ListView list;
+    Button btnZoom;
+    Button btnSave;
     Button btnScan;
+    Button btnLocation;
+    Button btnAuto;
+    EditText edtMyLoc;
 
     ArrayList<SSIDItem> arrayList;
     WifiManager wifiManager;
     List<ScanResult> scanResults;
     SSIDAdapter adapter = new SSIDAdapter();
+
+    StaticVar sv;
 
     //Location Permission을 위한 필드
     public static final int MULTIPLE_PERMISSIONS = 10;
@@ -52,12 +62,26 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        edtMyLoc.setText(sv.getStation());
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         list = findViewById(R.id.list);
+        btnZoom = findViewById(R.id.btnZoom);
+        btnSave = findViewById(R.id.btnSave);
         btnScan = findViewById(R.id.btnScan);
+        btnLocation = findViewById(R.id.btnLocation);
+        btnAuto = findViewById(R.id.btnAuto);
+        edtMyLoc = findViewById(R.id.edtMyLoc);
+
+        sv = StaticVar.getInstance();
+        edtMyLoc.setText(sv.getStation());
 
         wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
 
@@ -74,6 +98,23 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
+        btnZoom.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(MainActivity.this, BlacklistActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        btnSave.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(MainActivity.this, SaveActivity.class);
+                sv.setList(adapter.getItems());
+                startActivity(intent);
+            }
+        });
+
         btnScan.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -85,6 +126,36 @@ public class MainActivity extends AppCompatActivity {
                 if(!success) {
                     scanFailure();
                 }
+            }
+        });
+
+        btnLocation.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                List<ScanResult> results = wifiManager.getScanResults();
+
+                Log.v("Scan Result", "Success");
+
+                adapter.clearItem();
+
+                for(ScanResult result : results) {
+                    adapter.addItem(result.SSID, result.BSSID, result.level + "");
+                    adapter.notifyDataSetChanged();
+                }
+
+                sv.setStation(edtMyLoc.getText().toString());
+                sv.setList(adapter.getItems());
+
+                Intent intent = new Intent(MainActivity.this, LocationActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        btnAuto.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(MainActivity.this, AutoActivity.class);
+                startActivity(intent);
             }
         });
 
@@ -115,12 +186,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void dataSetting() {
-
-        for(int i = 0; i < 5; i++) {
-            adapter.addItem("Name" + i, "SSID" + i, "Signal" + i);
-        }
-
         list.setAdapter(adapter);
+        list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
+                StaticVar sv = StaticVar.getInstance();
+                SSIDItem item = adapter.getItem(position);
+                sv.addBlackList(item);
+                Toast.makeText(getApplicationContext(), item.name + " 블랙리스트 추가", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private boolean checkPermissions() {

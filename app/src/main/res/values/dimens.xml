@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <dimen name="marginDefault">8dp</dimen>
+
+    <dimen name="textSmall">12sp</dimen>
+    <dimen name="textDefault">16sp</dimen>
 </resources>
